@@ -1,0 +1,14 @@
+{
+  "name": "ddd-player-list",
+  "version": "0.0.1",
+  "title": "Player List",
+  "author": "DDDGamer",
+  "contact": "https://github.com/deniszholob/factorio-mod-player-list/issues",
+  "homepage": "https://discord.gg/PkyzXzz",
+  "description": "This mod adds in a player list overlay that displays all the players in the game",
+  "factorio_version": "1.1",
+  "dependencies": [
+    "base >= 1.1",
+    "stdlib"
+  ]
+}
