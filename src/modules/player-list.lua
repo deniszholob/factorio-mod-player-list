@@ -36,12 +36,15 @@ PlayerList = {
   ONLINE_SYMBOL = '●',
   OFFLINE_SYMBOL = '○',
   ADMIN_SYMBOL = '★',
+  -- INVENTORY_TARGET_ALL = true,
   INVENTORY_TARGET_ALL = not settings.startup["player_list_settings_inventory_target_all"].value,
+  -- INVENTORY_PEEK_ENABLED = true,
   INVENTORY_PEEK_ENABLED = settings.startup["player_list_settings_inventory_peek_enabled"].value,
-  LIST_MAX_HEIGHT = 600,
-  PROGRESS_BAR_HEIGHT = 4,
-  ENTRY_MARGIN = 0,
-  REFRESH_PERIOD = 1, -- minute
+  -- REFRESH_PERIOD = 60, -- seconds
+  REFRESH_PERIOD = settings.global["player_list_settings_refresh_period"].value,
+  MAX_HEIGHT = 600, -- user-setting
+  PLAYTIME_BAR_HEIGHT = 4, -- user-setting
+  ENTRY_MARGIN = 0, -- user-setting
 }
 
 -- Event Functions --
@@ -52,6 +55,7 @@ PlayerList = {
 --- @param event defines.events.on_player_joined_game
 function PlayerList.on_player_joined_game(event)
   local player = game.players[event.player_index]
+  PlayerList.sync_settings(player)
   PlayerList.draw_playerlist_btn(player)
   PlayerList.draw_playerlist_frame()
 end
@@ -94,8 +98,8 @@ end
 --- Refresh the playerlist after ? min
 --- @param event defines.events.on_tick
 function PlayerList.on_tick(event)
-  local refresh_period = PlayerList.REFRESH_PERIOD -- minutes
-  if (Time.tick_to_min(game.tick) % refresh_period == 0) then
+  local refresh_period = PlayerList.REFRESH_PERIOD -- seconds
+  if (Time.tick_to_sec(game.tick) % refresh_period == 0) then
     PlayerList.draw_playerlist_frame()
   end
 end
@@ -121,10 +125,18 @@ end
 function PlayerList.on_runtime_mod_setting_changed(event)
   local player = game.players[event.player_index]
 
+  if (event.setting == "player_list_settings_refresh_period") then
+    PlayerList.REFRESH_PERIOD = settings.global[event.setting].value
+  end
+
   if (
       event.setting == "player_list_settings_max_height" or
-          event.setting == "player_list_settings_entry_margin"
+          event.setting == "player_list_settings_entry_margin" or
+          event.setting == "player_list_settings_playtime_bar_height"
       ) then
+
+    PlayerList.getConfig(player)[event.setting] = settings.get_player_settings(player)[
+        event.setting].value
     PlayerList.draw_playerlist_frame_for_player(player, PlayerList.get_sorted_player_list())
   end
 end
@@ -146,6 +158,16 @@ Event.register(
 
 -- Helper Functions --
 -- ======================================================= --
+
+function PlayerList.sync_settings(player)
+  for i, setting in pairs({
+    "player_list_settings_max_height",
+    "player_list_settings_entry_margin",
+    "player_list_settings_playtime_bar_height"
+  }) do
+    PlayerList.getConfig(player)[setting] = settings.get_player_settings(player)[setting].value
+  end
+end
 
 --- @param player LuaPlayer
 function PlayerList.getLblPlayerName(player)
@@ -203,55 +225,57 @@ function PlayerList.draw_playerlist_frame_for_player(player, player_list)
       { type = 'frame', name = PlayerList.MASTER_FRAME_NAME, direction = 'vertical' }
     )
   end
-  -- Clear and repopulate player list
+  -- Clear player list
   GUI.clear_element(master_frame)
 
-  -- Flow
-  local flow_header = master_frame.add({ type = 'flow', direction = 'horizontal' })
-  flow_header.style.horizontal_spacing = 20
-  flow_header.style.horizontally_stretchable = true
+  -- Repopulate player list
+  if (player.connected) then
+    -- Flow
+    local flow_header = master_frame.add({ type = 'flow', direction = 'horizontal' })
+    flow_header.style.horizontal_spacing = 20
+    flow_header.style.horizontally_stretchable = true
 
-  -- Draw checkbox
-  flow_header.add(
-    {
-      type = 'checkbox',
-      name = PlayerList.CHECKBOX_OFFLINE_PLAYERS,
-      caption = { 'player_list.checkbox_caption' },
-      tooltip = { 'player_list.checkbox_tooltip' },
-      state = PlayerList.getConfig(player).show_offline_players or false
-    }
-  )
+    -- Draw checkbox
+    flow_header.add(
+      {
+        type = 'checkbox',
+        name = PlayerList.CHECKBOX_OFFLINE_PLAYERS,
+        caption = { 'player_list.checkbox_caption' },
+        tooltip = { 'player_list.checkbox_tooltip' },
+        state = PlayerList.getConfig(player).show_offline_players or false
+      }
+    )
 
-  -- Draw total number
-  local total = flow_header.add(
-    {
-      type = 'label',
-      caption = { 'player_list.total_players', #game.players, #game.connected_players }
-    }
-  )
-  total.style.horizontal_align = "right"
+    -- Draw total number
+    local total = flow_header.add(
+      {
+        type = 'label',
+        caption = { 'player_list.total_players', #game.players, #game.connected_players }
+      }
+    )
+    total.style.horizontal_align = "right"
 
-  -- Add scrollable section to content frame
-  local scrollable_content_frame =
-  master_frame.add(
-    {
-      type = 'scroll-pane',
-      vertical_scroll_policy = 'auto-and-reserve-space',
-      horizontal_scroll_policy = 'never'
-    }
-  )
-  -- scrollable_content_frame.style.maximal_height = PlayerList.LIST_MAX_HEIGHT
-  scrollable_content_frame.style.maximal_height = settings.get_player_settings(player)[
-      "player_list_settings_max_height"].value
+    -- Add scrollable section to content frame
+    local scrollable_content_frame =
+    master_frame.add(
+      {
+        type = 'scroll-pane',
+        vertical_scroll_policy = 'auto-and-reserve-space',
+        horizontal_scroll_policy = 'never'
+      }
+    )
+    -- scrollable_content_frame.style.maximal_height = PlayerList.LIST_MAX_HEIGHT
+    -- scrollable_content_frame.style.maximal_height = settings.get_player_settings(player)["player_list_settings_max_height"].value
+    scrollable_content_frame.style.maximal_height = PlayerList.getConfig(player).player_list_settings_max_height
 
-  -- List all players
-  for j, list_player in pairs(player_list) do
-    if (list_player.connected or PlayerList.getConfig(player).show_offline_players) then
-      PlayerList.to_list_add_player_entry(scrollable_content_frame, list_player, player, j % 2 == 1)
+    -- List all players
+    for j, list_player in pairs(player_list) do
+      if (list_player.connected or PlayerList.getConfig(player).show_offline_players) then
+        PlayerList.to_list_add_player_entry(scrollable_content_frame, list_player, player, j % 2 == 1)
+      end
     end
   end
 end
-
 
 -- Add target_player entry to the GUI list
 ---@param container LuaGuiElement to attach more UI elements to
@@ -261,8 +285,8 @@ end
 function PlayerList.to_list_add_player_entry(container, target_player, player, stripe)
   local c = container.add({ type = 'flow', direction = 'vertical' })
   -- c.style.bottom_margin = PlayerList.ENTRY_MARGIN
-  c.style.bottom_margin = settings.get_player_settings(player)[
-      "player_list_settings_entry_margin"].value
+  -- c.style.bottom_margin = settings.get_player_settings(player)["player_list_settings_entry_margin"].value
+  c.style.bottom_margin = PlayerList.getConfig(player).player_list_settings_entry_margin
 
   local color = {
     r = target_player.color.r,
@@ -271,10 +295,11 @@ function PlayerList.to_list_add_player_entry(container, target_player, player, s
     a = 1
   }
 
-  PlayerList.to_entry_add_entry_info(c, target_player, color, player)
-  PlayerList.to_entry_add_player_playtime(c, target_player, color)
-
   -- c.add { type = "line" }
+  PlayerList.to_entry_add_entry_info(c, target_player, color, player)
+  PlayerList.to_entry_add_player_playtime(c, target_player, color, player)
+  -- c.add { type = "line" }
+
 end
 
 -- Add target_player entry info to entry
@@ -294,7 +319,7 @@ end
 ---@param container LuaGuiElement to attach more UI elements to
 ---@param target_player LuaPlayer this is who the entry is about
 ---@param color Color data object
-function PlayerList.to_entry_add_player_playtime(container, target_player, color)
+function PlayerList.to_entry_add_player_playtime(container, target_player, color, player)
   local played_percentage = 1
   if (game.tick > 0) then
     played_percentage = target_player.online_time / game.tick
@@ -312,9 +337,11 @@ function PlayerList.to_entry_add_player_playtime(container, target_player, color
       tooltip = { 'player_list.player_tooltip_playtime', Math.round_to(played_percentage * 100, 2) }
     }
   )
-  entry_bar.style.color = color
-  entry_bar.style.height = PlayerList.PROGRESS_BAR_HEIGHT
   entry_bar.style.horizontally_stretchable = true
+  entry_bar.style.color = color
+  -- entry_bar.style.height = PlayerList.PROGRESS_BAR_HEIGHT
+  -- entry_bar.style.height = settings.get_player_settings(player)["player_list_settings_playtime_bar_height"].value
+  entry_bar.style.height = PlayerList.getConfig(player).player_list_settings_playtime_bar_height
 end
 
 --- Adds a button to open target_player's inventory if player has permissions
@@ -457,6 +484,9 @@ function PlayerList.getConfig(player)
       show_offline_players = false,
       mine = false,
       decon = false,
+      player_list_settings_max_height = PlayerList.MAX_HEIGHT,
+      player_list_settings_entry_margin = PlayerList.ENTRY_MARGIN,
+      player_list_settings_playtime_bar_height = PlayerList.PLAYTIME_BAR_HEIGHT,
     }
   end
 

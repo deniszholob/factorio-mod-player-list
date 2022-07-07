@@ -17,11 +17,14 @@ Also take a look at my [softmod pack](https://github.com/deniszholob/factorio-so
 
 
 # Support Me
-If you find the cheat sheet or the source code useful, consider:
+If you find the mod or the source code useful, consider:
 
 * Donating Ko-fi: https://ko-fi.com/deniszholob
 * Supporting on Patreon: https://www.patreon.com/deniszholob
 
 
 # Screenshots
-![Player List](screenshots/dddgamer-softmod_player-list.png)
+![Player List](screenshots/ddd-player-list_mod_in-game.png)
+![Player List Setup Settings](screenshots/ddd-player-list_mod_setting_setup.png)
+![Player List GLobal Settings](screenshots/ddd-player-list_mod_setting_global.png)
+![Player List Player Settings](screenshots/ddd-player-list_mod_setting_player.png)

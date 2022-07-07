@@ -17,6 +17,14 @@ data:extend({
   },
 
   -- GLOBAL SETTINGSS --
+  {
+    type = "int-setting",
+    name = "player_list_settings_refresh_period",
+    setting_type = "runtime-global",
+    default_value = 60,
+    minimum_value = 1,
+    order = "1",
+  },
 
   -- PLAYER SETTINGS --
   {
@@ -32,5 +40,14 @@ data:extend({
     setting_type = "runtime-per-user",
     default_value = 0,
     order = "2",
+  },
+  {
+    type = "int-setting",
+    name = "player_list_settings_playtime_bar_height",
+    setting_type = "runtime-per-user",
+    default_value = 4,
+    minimum_value = 4,
+    maximum_value  = 10,
+    order = "3",
   },
 })
