@@ -17,7 +17,8 @@
   "workbench.iconTheme": "material-icon-theme",
   "Lua.runtime.version": "Lua 5.2",
   "Lua.workspace.library": [
-    "./factorio"
+    "./factorio",
+    "~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Factorio/data"
   ],
   "Lua.diagnostics.globals": [
     "game",
@@ -39,12 +40,20 @@
   ],
   "factorio.versions": [
     {
-      "name": "dddgamer-latest",
-      "factorioPath": "g:\\Games\\Steam\\steamapps\\common\\Factorio\\bin\\x64\\factorio.exe",
+      "name": "windows",
+      "factorioPath": "g:\\Games\\Steam\\steamapps\\common\\Factorio\\bin\\x64\\factorio.exe"
+    },
+    {
+      "name": "linux-flatpack",
+      "factorioPath": "~/.var/app/com.valvesoftware.Steam/data/Steam/steamapps/common/Factorio/bin/x64/factorio",
       "active": true
     }
   ],
   "cSpell.words": [
     "Factorio"
   ],
+  "Lua.workspace.userThirdParty": [
+    "~/.config/Code/User/workspaceStorage/5f292896a59b285dd3d7d1d94b9d958f/justarandomgeek.factoriomod-debug/sumneko-3rd"
+  ],
+  "Lua.workspace.checkThirdParty": "ApplyInMemory",
 }

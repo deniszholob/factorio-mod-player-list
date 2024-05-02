@@ -108,16 +108,20 @@ end
 --- @param event defines.events.on_player_deconstructed_area
 function PlayerList.on_player_deconstructed_area(event)
   local player = game.players[event.player_index]
-  PlayerList.getConfig(player).decon = true
-  PlayerList.draw_playerlist_frame()
+  if(not PlayerList.getConfig(player).decon) then
+    PlayerList.getConfig(player).decon = true
+    PlayerList.draw_playerlist_frame()
+  end
 end
 
 --- When new player mines something
 --- @param event defines.events.on_player_mined_item
 function PlayerList.on_player_mined_item(event)
   local player = game.players[event.player_index]
-  PlayerList.getConfig(player).mine = true
-  PlayerList.draw_playerlist_frame()
+  if(not PlayerList.getConfig(player).mine) then
+    PlayerList.getConfig(player).mine = true
+    PlayerList.draw_playerlist_frame()
+  end
 end
 
 --- When a player changes mod settings
